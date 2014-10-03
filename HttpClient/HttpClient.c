@@ -121,7 +121,7 @@ int Request(char *ipaddr, char *port){      //This function is created for HTTP 
         unsigned int intlen = sizeof(int);
         char filename[100];
         int bytes_read;
-        char *content[3];
+        char *content[8];
 
         struct addrinfo hints, *res, *rp;           //using addressinfo struct
 	    memset(&hints, 0, sizeof hints);
