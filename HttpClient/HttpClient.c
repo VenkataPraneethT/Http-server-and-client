@@ -25,7 +25,7 @@ int get_file(char *ipaddr, char *port){
        	char httpheader[1024];
         const char *page = "/dns-query";
         const char *b=" Praneeth";
-	    char poststr[256]; 
+	char poststr[256]; 
         char dnsname[100];
         char type[50];
         char content[MAXBUF];
@@ -35,9 +35,9 @@ int get_file(char *ipaddr, char *port){
         unsigned int intlen = sizeof(int);
         
         struct addrinfo hints, *res,*rp;
-	    memset(&hints, 0, sizeof hints);
-	    hints.ai_family = AF_UNSPEC; // IPv4 or IPv6
-	    hints.ai_socktype = SOCK_STREAM; //TCP socket
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC; // IPv4 or IPv6
+	hints.ai_socktype = SOCK_STREAM; //TCP socket
         hints.ai_protocol = 0;
 
 
@@ -56,7 +56,7 @@ int get_file(char *ipaddr, char *port){
 
 snprintf(httpheader, MAXBUF, "POST %s HTTP/1.1\r\nHost: %s\r\nIam:%s\r\nContent-type: application/x-www-form-urlencoded\r\nContent-length: %d\r\n\r\n%s", page, ipaddr,b, lenpostr, poststr);
 
-     //printf("%s\n",ipaddr);
+printf("%s\n",ipaddr);
 
 	if ( getaddrinfo(ipaddr, port, &hints, &res) != 0 ){
 		fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -79,7 +79,7 @@ snprintf(httpheader, MAXBUF, "POST %s HTTP/1.1\r\nHost: %s\r\nIam:%s\r\nContent-
            }
 
            if (rp == NULL) {               /* No address succeeded */
-               fprintf(stderr, "unable to connect\n");
+               fprintf(stderr, "Could not connect\n");
                exit(EXIT_FAILURE);
            }        
 
@@ -88,7 +88,8 @@ if (getsockopt(sock, SOL_SOCKET, SO_SNDBUF,
 		perror("getsockopt");
 		return -1;
 	}
-  
+
+	   
         int optval = 1;
         setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
@@ -114,40 +115,42 @@ int Request(char *ipaddr, char *port){      //This function is created for HTTP 
 
 	int sockfd;              //In this function socket creation, connection and HTTP GET header formatting takes place.
         char  path[100];   
-	    char getrequest[1024];
+	char getrequest[1024];
         const char *b=" Praneeth";
         int sockbufsize;
+        char *reqli[1];
         char s[MAXBUF];
         unsigned int intlen = sizeof(int);
         char filename[100];
         int bytes_read;
-        char *content[8];
-
+       
+        char *content;
+       
         struct addrinfo hints, *res, *rp;           //using addressinfo struct
-	    memset(&hints, 0, sizeof hints);
-	    hints.ai_family = AF_UNSPEC;           //Can handle IP address family of either IPV4 or IPV6
-	    hints.ai_socktype = SOCK_STREAM;
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;           //Can handle IP address family of either IPV4 or IPV6
+	hints.ai_socktype = SOCK_STREAM;
 
         if ( getaddrinfo(ipaddr, port, &hints, &res) != 0 ){
-	      fprintf(stderr, "Either of hostname or IP address is not valid\n");
-	      exit(0);
-	          }
+	fprintf(stderr, "Either of hostname or IP address is not valid\n");
+	exit(0);
+	}
 
-	     for (rp = res; rp != NULL; rp = rp->ai_next) {
+	 for (rp = res; rp != NULL; rp = rp->ai_next) {
               sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
                if (sockfd == -1)
                    continue;
 
                if ( connect(sockfd, res->ai_addr, res->ai_addrlen) != 0 ){
-		        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-		         exit(0);
-		         } else {break;}                  /* Succeded */
+		fprintf(stderr, "ERROR: %s\n", strerror(errno));
+		exit(0);
+		} else {break;}                  /* Success */
                
-                 close(sockfd);
-                 }
+          close(sockfd);
+           }
 
            if (rp == NULL) {               /* No address succeeded */
-               fprintf(stderr, "unable to connect\n");
+               fprintf(stderr, "Could not connect\n");
                exit(EXIT_FAILURE);
            }        
 
@@ -157,7 +160,7 @@ int Request(char *ipaddr, char *port){      //This function is created for HTTP 
 		return -1;
 	}
 
-	    int optval = 1;
+	int optval = 1;
         setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
         
         printf("Please enter the filename to be downloaded preceeding with slash '/' ex: /test.txt\n");
@@ -165,35 +168,41 @@ int Request(char *ipaddr, char *port){      //This function is created for HTTP 
 
         sprintf(getrequest, "GET %s HTTP/1.1\r\nHOST: %s\r\nIam:%s\r\n\r\n", path, ipaddr,b);
 
-	    write(sockfd, getrequest, strlen(getrequest));
+	write(sockfd, getrequest, strlen(getrequest));
 
-        printf("Please enter the path and the filename to save it in that location\n");
+        printf("Please enter the path where you want to save the file in your local desktop along with the filename of your choice ex:/home/Desktop/test.txt \n");
         scanf("%s",filename);
 
-        FILE *fp = fopen(filename, "w+");	//Opening a file.
+    FILE *fp = fopen(filename, "w+");	//Opening a file.
        
-        bzero(s, sizeof(s));
-        bytes_read = recv(sockfd, s, sizeof(s), 0);
-
-        if (bytes_read<0)    // receive error
-           fprintf(stderr,("received() error\n"));
-        else if (bytes_read==0)    // receive socket closed
-           fprintf(stderr,"Server disconnected upexpectedly.\n");
-         else    // message received
-          {
-           content[0]=strtok(s,"\r\n\r\n");
-           content[1]=strtok(NULL, "\r\n\r\n");
-           content[2]=strtok(NULL, "\r\n\r\n");
-           content[3]=strtok(NULL, "\r\n\r\n");
-           content[4]=strtok(NULL, "\r\n\r\n");
-           content[5]=strtok(NULL, "\r\n\r\n");
-           content[6]=strtok(NULL,"\0");
-           fwrite(content[6], strlen(content[6]) + 1, 1, fp);
-          }
-
+    bzero(s, sizeof(s));
+    
+    while((bytes_read = recv(sockfd, s, MAXBUF, MSG_WAITALL)) > 0)
+        {
+            
+            content = strstr(s, "\r\n\r\n");
+         
+            if(content != NULL)
+            {
+              content +=4;
+              fwrite(content, strlen(content) + 1, 1, fp);
+            }
+            if(strncmp(s,"HTTP/1.1",8)==0)
+           { 
+            reqli[0] = strtok (s, "\r\n\r\n");
+            printf("Your GET request has been completed with the following response %s \n", reqli[0]);
+            }
+ 
+             bzero(s, sizeof(s));
+            
+        }
+         
+    if(bytes_read < 0)
+      {
+    perror("Error receiving data");
+       }
+       
       fclose(fp);
-
-printf("Your GET request has been completed with the following response %s \n", content[0]);
 
 return sockfd;
 }
@@ -253,12 +262,12 @@ snprintf(putsrequest,MAXBUF,"PUT %s HTTP/1.1\r\nHost: %s\r\nIam:%s\r\nContent-Ty
                    continue;
 
                if ( connect(sockfd, res->ai_addr, res->ai_addrlen) != 0 ){
-		         fprintf(stderr, "ERROR: %s\n", strerror(errno));
-		         exit(0);
-		         } else {break;}                  /* Success */
+		fprintf(stderr, "ERROR: %s\n", strerror(errno));
+		exit(0);
+		} else {break;}                  /* Success */
 
                close(sockfd);
-                 }
+           }
 
            if (rp == NULL) {               /* No address succeeded */
                fprintf(stderr, "Could not connect\n");
@@ -280,11 +289,11 @@ else {
 		return 1;
 	}
 
-       pclose(fp);
+        pclose(fp);
        bzero(s, sizeof(s));
        bytes_read = recv(sockfd, s, sizeof(s), 0);
    
-    if (bytes_read<0)    // receive error
+   if (bytes_read<0)    // receive error
         fprintf(stderr,("received() error\n"));
     else if (bytes_read==0)    // receive socket closed
         fprintf(stderr,"Server disconnected upexpectedly.\n");
@@ -309,13 +318,14 @@ int main(int argc, char **argv){   //Main function.
         }
 
         port = atoi(argv[2]);
-	    host = argv[1];
+	host = argv[1];
     
 	if ( (ptr = strstr(host, "http://")) != NULL || (ptr = strstr(host, "https://")) != NULL )
 
          {                                               //validating the hostnames that user enters
-		   host = host + 7;
-         }
+		host = host + 7;
+                
+	}
 
 
         if ( port > 65536 || port < 0 ){  //validating the ports
@@ -343,10 +353,11 @@ else if ((strcmp(choice, "POST")==0)|| (strcmp(choice, "post")==0))
 }
 
 else{
-printf("This application doesn't support such requests\n");
+printf("This application doesnot support such requests\n");
 }
 
 close(sockfd);
+
 
 return 0;
 
